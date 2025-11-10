@@ -18,6 +18,20 @@ const pool = mysql.createPool({
   database,
 });
 
+// 테스트 게임 단어 조회
+app.get("/gameword/:wordId", async (req, res) => {
+  try {
+    const [gameword] = await pool.query(
+      "SELECT id, room_id, round_number, scrambled_word, correct_word FROM game_words WHERE id = ?",
+      [req.params.wordId]
+    );
+    console.log(gameword);
+    res.json(gameword);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 app.listen(port || 4000, () => {
   console.log(`서버 실행 중 : ${port}`);
 });
