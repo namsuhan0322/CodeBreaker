@@ -5,6 +5,7 @@ using NativeWebSocket;
 using Newtonsoft.Json;
 using UnityEngine.UI;
 using System;
+using UnityEngine.Networking;
 
 [Serializable]
 public class NetworkMessage
@@ -37,6 +38,7 @@ public class Vecter3Data
 
 public class NetworkManager : MonoBehaviour
 {
+    public static NetworkManager Instance;
     private WebSocket webSocket;
     [SerializeField] private string serverUrl = "ws://localhost:3000";
 
@@ -48,7 +50,37 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private Text statusText;
 
     private string myPlayerId;
+    private string baseUrl = "http://localhost:3000";
 
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public IEnumerator Post(string url, string json, System.Action<string> callback)
+    {
+        var request = new UnityWebRequest(baseUrl + url, "POST");
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.result == UnityWebRequest.Result.Success)
+            callback?.Invoke(request.downloadHandler.text);
+        else
+            Debug.LogError(request.error);
+    }
     // Start is called before the first frame update
     void Start()
     {

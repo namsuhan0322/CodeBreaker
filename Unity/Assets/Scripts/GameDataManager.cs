@@ -6,42 +6,57 @@ using Newtonsoft.Json;
 
 public class GameDataManager : MonoBehaviour
 {
+    public static GameDataManager Instance { get; private set; }
     private string URL = "http://localhost:3000";
 
     public User CurrentPlayer { get; private set; }
     public Room CurrentRoom { get; private set; }
-    public GameWord CurrentWord { get; private set; } // Å×½ºÆ® ¿ë
+    public GameWord CurrentWord { get; private set; } 
     public GameResult CurrentGameResult { get; private set; }
 
-    [Header("µ¥ÀÌÅÍ ¸®½ºÆ®")]
+    [Header("ë°ì´í„° ë¦¬ìŠ¤íŠ¸")]
     public List<Room> rooms = new List<Room>();
     public List<RoomPlayer> roomPlayers = new List<RoomPlayer>();
     public List<GameWord> gameWords = new List<GameWord>();
     public List<RoundAnswer> roundAnswers = new List<RoundAnswer>();
     public List<GameResult> matchHistory = new List<GameResult>();
 
-    [Tooltip("ÀÌº¥Æ® (Event Delegates)")]
-    // ·ÎºñÀÇ ÀüÃ¼ ¹æ ¸ñ·ÏÀÌ ¾÷µ¥ÀÌÆ®µÉ ¶§
+    [Tooltip("ì´ë²¤íŠ¸ (Event Delegates)")]
+    // ë¡œë¹„ì˜ ì „ì²´ ë°© ëª©ë¡ì´ ì—…ë°ì´íŠ¸ë  ë•Œ
     public delegate void OnRoomListUpdateHandler(List<Room> rooms);
     public event OnRoomListUpdateHandler OnRoomListUpdate;
-    // ÇöÀç ÀÔÀåÇÑ ¹æÀÇ ÇÃ·¹ÀÌ¾î ¸ñ·ÏÀÌ º¯°æµÉ ¶§
+    // í˜„ì¬ ì…ì¥í•œ ë°©ì˜ í”Œë ˆì´ì–´ ëª©ë¡ì´ ë³€ê²½ë  ë•Œ
     public delegate void OnRoomPlayersUpdateHandler(List<RoomPlayer> players);
     public event OnRoomPlayersUpdateHandler OnRoomPlayersUpdate;
-    // °ÔÀÓÀÌ ½ÃÀÛµÇ°í ´Ü¾î ¸ñ·Ï(¹®Á¦)À» ¹Ş¾ÒÀ» ¶§
+    // ê²Œì„ì´ ì‹œì‘ë˜ê³  ë‹¨ì–´ ëª©ë¡(ë¬¸ì œ)ì„ ë°›ì•˜ì„ ë•Œ
     public delegate void OnGameStartHandler(List<GameWord> words);
     public event OnGameStartHandler OnGameStart;
-    // ´©±º°¡ Á¤´äÀ» Á¦ÃâÇÏ´Â µî ´äº¯ ¸ñ·ÏÀÌ °»½ÅµÉ ¶§
+    // ëˆ„êµ°ê°€ ì •ë‹µì„ ì œì¶œí•˜ëŠ” ë“± ë‹µë³€ ëª©ë¡ì´ ê°±ì‹ ë  ë•Œ
     public delegate void OnRoundAnswersUpdateHandler(List<RoundAnswer> answers);
     public event OnRoundAnswersUpdateHandler OnRoundAnswersUpdate;
-    // °ÔÀÓÀÌ Á¾·áµÇ°í ÃÖÁ¾ °á°ú¸¦ ¹Ş¾ÒÀ» ¶§
+    // ê²Œì„ì´ ì¢…ë£Œë˜ê³  ìµœì¢… ê²°ê³¼ë¥¼ ë°›ì•˜ì„ ë•Œ
     public delegate void OnGameResultHandler(GameResult result);
     public event OnGameResultHandler OnGameResult;
-    // ÇöÀç ÇÃ·¹ÀÌ¾îÀÇ Á¤º¸°¡ °»½ÅµÉ ¶§ (¿¹: Á¡¼ö °»½Å)
+    // í˜„ì¬ í”Œë ˆì´ì–´ì˜ ì •ë³´ê°€ ê°±ì‹ ë  ë•Œ (ì˜ˆ: ì ìˆ˜ ê°±ì‹ )
     public delegate void OnPlayerUpdateHandler(User player);
     public event OnPlayerUpdateHandler OnPlayerUpdate;
-    // ¸ÅÄ¡ È÷½ºÅä¸®(ÀüÀû) ¸ñ·ÏÀ» ºÒ·¯¿ÔÀ» ¶§
+    // ë§¤ì¹˜ íˆìŠ¤í† ë¦¬(ì „ì ) ëª©ë¡ì„ ë¶ˆëŸ¬ì™”ì„ ë•Œ
     public delegate void OnMatchHistoryUpdateHandler(List<GameResult> history);
     public event OnMatchHistoryUpdateHandler OnMatchHistoryUpdate;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
 
     private void Start()
     {
@@ -51,7 +66,7 @@ public class GameDataManager : MonoBehaviour
         StartCoroutine(GetGameWords());
     }
 
-    // Å×½ºÆ® °ÔÀÓ ´Ü¾î Á¶È¸
+    // í…ŒìŠ¤íŠ¸ ê²Œì„ ë‹¨ì–´ ì¡°íšŒ
     private IEnumerator GetGameWords()
     {
         using (UnityWebRequest www = UnityWebRequest.Get($"{URL}/gameword/{CurrentWord.Id}"))
@@ -61,7 +76,7 @@ public class GameDataManager : MonoBehaviour
             if (www.result == UnityWebRequest.Result.Success)
             {
                 gameWords = JsonConvert.DeserializeObject<List<GameWord>>(www.downloadHandler.text);
-                Debug.Log("°ÔÀÓ ´Ü¾îµé : ");
+                Debug.Log("ê²Œì„ ë‹¨ì–´ë“¤ : ");
                 foreach (GameWord word in gameWords)
                 {
                     Debug.Log($" - {word.Id}, {word.RoomId}, {word.RoundNumber}, {word.ScrambledWord}, {word.CorrectWord}");
@@ -71,7 +86,7 @@ public class GameDataManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"°ÔÀÓ ´Ü¾î Á¶È¸ ½ÇÆĞ : {www.error}");
+                Debug.LogError($"ê²Œì„ ë‹¨ì–´ ì¡°íšŒ ì‹¤íŒ¨ : {www.error}");
             }
         }
     }
@@ -80,4 +95,89 @@ public class GameDataManager : MonoBehaviour
     {
         return gameWords.Find(gameword => gameword.Id == wordId);
     }
+    // ë°© ì°¾ê¸°
+    public IEnumerator FindMatch()
+    {
+        using (UnityWebRequest www = UnityWebRequest.PostWwwForm($"{URL}/room/match", ""))
+        {
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                Room room = JsonConvert.DeserializeObject<Room>(www.downloadHandler.text);
+
+                CurrentRoom = room;
+                rooms.Clear();
+                rooms.Add(room);
+
+                OnRoomListUpdate?.Invoke(rooms);
+            }
+            else
+            {
+                Debug.LogError($"ë°© ì°¾ê¸° ì‹¤íŒ¨ : {www.error}");
+            }
+        }
+    }
+    public IEnumerator GetRoomList()
+    {
+        using (UnityWebRequest www = UnityWebRequest.Get($"{URL}/rooms"))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                rooms = JsonConvert.DeserializeObject<List<Room>>(www.downloadHandler.text);
+                OnRoomListUpdate?.Invoke(rooms);
+            }
+            else
+            {
+                Debug.LogError("ë°© ëª©ë¡ ë¶ˆëŸ¬ì˜¤ê¸° ì‹¤íŒ¨");
+            }
+        }
+    }
+    public IEnumerator CreateRoom(string roomName)
+    {
+        WWWForm form = new WWWForm();
+        form.AddField("roomName", roomName);
+
+        using (UnityWebRequest www = UnityWebRequest.Post($"{URL}/room/create", form))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                Room room = JsonConvert.DeserializeObject<Room>(www.downloadHandler.text);
+                CurrentRoom = room;
+
+                rooms.Clear();
+                rooms.Add(room);
+
+                OnRoomListUpdate?.Invoke(rooms);
+            }
+            else
+            {
+                Debug.LogError($"ë°© ìƒì„± ì‹¤íŒ¨ : {www.error}");
+            }
+        }
+    }
+
+    public IEnumerator JoinRoom(int roomId)
+    {
+        using (UnityWebRequest www = UnityWebRequest.PostWwwForm($"{URL}/room/join/{roomId}", ""))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                CurrentRoom = JsonConvert.DeserializeObject<Room>(www.downloadHandler.text);
+            }
+            else
+            {
+                Debug.LogError("ë°© ì…ì¥ ì‹¤íŒ¨");
+            }
+        }
+    }
+
 }
