@@ -22,7 +22,7 @@ CREATE TABLE rooms (
         FOREIGN KEY (host_id) REFERENCES users(id)
         ON DELETE CASCADE -- 호스트가 탈퇴하면 방도 삭제 (정책에 따라 RESTRICT 또는 SET NULL로 변경 가능)
         ON UPDATE CASCADE
-)
+) ENGINE=InnoDB COLLATE='utf8mb4_0900_ai_ci';
 
 -- room_players 테이블
 CREATE TABLE room_players (
@@ -45,7 +45,7 @@ CREATE TABLE room_players (
     -- 한 방에 같은 유저가 중복 입장하거나 같은 좌석 번호를 갖는 것을 방지
     UNIQUE KEY uk_room_user (room_id, user_id),
     UNIQUE KEY uk_room_seat (room_id, seat_number)
-)
+) ENGINE=InnoDB COLLATE='utf8mb4_0900_ai_ci';
 
 -- game_results 테이블
 CREATE TABLE game_results (
@@ -65,7 +65,7 @@ CREATE TABLE game_results (
         FOREIGN KEY (winner_id) REFERENCES users(id)
         ON DELETE SET NULL -- 승자가 탈퇴해도 기록은 남김 (NULL로 변경)
         ON UPDATE CASCADE
-)
+) ENGINE=InnoDB COLLATE='utf8mb4_0900_ai_ci';
 
 -- game_words 테이블
 CREATE TABLE game_words (
@@ -81,7 +81,7 @@ CREATE TABLE game_words (
         FOREIGN KEY (room_id) REFERENCES rooms(id)
         ON DELETE CASCADE -- 방이 삭제되면 관련 단어 정보도 삭제
         ON UPDATE CASCADE
-)
+) ENGINE=InnoDB COLLATE='utf8mb4_0900_ai_ci';
 
 -- round_answers 테이블
 CREATE TABLE round_answers (
@@ -99,4 +99,4 @@ CREATE TABLE round_answers (
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE -- 유저가 탈퇴하면 답변도 삭제
         ON UPDATE CASCADE
-)
+) ENGINE=InnoDB COLLATE='utf8mb4_0900_ai_ci';
