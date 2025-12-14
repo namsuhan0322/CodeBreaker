@@ -4,6 +4,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 using System.Collections;
+[System.Serializable]
+public class LoginData
+{
+    public string username;
+    public string password;
+}
 
 public class LoginManager : MonoBehaviour
 {

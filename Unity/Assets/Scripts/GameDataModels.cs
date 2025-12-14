@@ -83,6 +83,7 @@ public class GameResult
 
     [JsonProperty("ended_at")]
     public string EndedAt { get; set; }
+    public int Score;
 }
 
 [Serializable]

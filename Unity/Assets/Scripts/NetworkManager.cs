@@ -7,6 +7,27 @@ using UnityEngine.UI;
 using System;
 using UnityEngine.Networking;
 
+
+
+[System.Serializable]
+public class GameResultData
+{
+    public int roomId;
+    public int userId;
+    public int score;
+}
+
+
+[System.Serializable]
+public class AnswerData
+{
+    public int roomId;
+    public int userId;
+    public string answer;
+    public bool correct;
+}
+
+
 [Serializable]
 public class NetworkMessage
 {
@@ -50,7 +71,8 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private Text statusText;
 
     private string myPlayerId;
-    private string baseUrl = "http://localhost:3000";
+    private string URL = "http://localhost:3000";
+
 
     private void Awake()
     {
@@ -67,7 +89,7 @@ public class NetworkManager : MonoBehaviour
 
     public IEnumerator Post(string url, string json, System.Action<string> callback)
     {
-        var request = new UnityWebRequest(baseUrl + url, "POST");
+        var request = new UnityWebRequest(URL + url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
 
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -241,5 +263,72 @@ public class NetworkManager : MonoBehaviour
             connectButton.onClick.RemoveListener(ConnectToServer);
         }
 
+    }
+
+    public void SendAnswer(string input, bool isCorrect)
+    {
+        StartCoroutine(SendAnswerCoroutine(input, isCorrect));
+    }
+
+    private IEnumerator SendAnswerCoroutine(string input, bool isCorrect)
+    {
+        AnswerData data = new AnswerData()
+        {
+            roomId = GameDataManager.Instance.CurrentRoom.Id,
+            userId = GameDataManager.Instance.CurrentPlayer.Id,
+            answer = input,
+            correct = isCorrect
+        };
+
+        string json = JsonConvert.SerializeObject(data);
+
+        using (UnityWebRequest www =
+               new UnityWebRequest($"{URL}/round/answer", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+            www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"답변 전송 실패 : {www.error}");
+            }
+        }
+    }
+
+    public void SendGameResult()
+    {
+        StartCoroutine(SendGameResultCoroutine());
+    }
+
+    private IEnumerator SendGameResultCoroutine()
+    {
+        GameResultData data = new GameResultData()
+        {
+            roomId = GameDataManager.Instance.CurrentRoom.Id,
+            userId = GameDataManager.Instance.CurrentPlayer.Id,
+            score = GameDataManager.Instance.CurrentGameResult.Score
+        };
+
+        string json = JsonConvert.SerializeObject(data);
+
+        using (UnityWebRequest www =
+               new UnityWebRequest($"{URL}/game/result", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+            www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"게임 결과 전송 실패 : {www.error}");
+            }
+        }
     }
 }
